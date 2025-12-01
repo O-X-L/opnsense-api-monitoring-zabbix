@@ -1,0 +1,327 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  templates:
+    - uuid: f3f42a14770747729a5855f0b4ba1e14
+      template: 'Template OPNsense API'
+      name: 'Template OPNsense API'
+      groups:
+        - name: Templates
+      items:
+        - uuid: 69ff006cb4344cc7a804c39ffddf5213
+          name: 'OPNsense - Gateway Stati'
+          type: HTTP_AGENT
+          key: opnsense.api.gws
+          delay: 5m
+          value_type: TEXT
+          authtype: BASIC
+          username: '{$OPN_API_KEY}'
+          password: '{$OPN_API_SECRET}'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.body
+          url: 'https://{$OPN_FIREWALL}/api/routing/settings/search_gateway'
+          follow_redirects: 'NO'
+          post_type: JSON
+          posts: '{"current": 1, "rowCount": 200}'
+          request_method: POST
+          output_format: JSON
+          verify_peer: 'YES'
+          verify_host: 'YES'
+        - uuid: 8b2e21f5971f4f3cbb6a178a0d514c00
+          name: 'OPNsense - Gateways High Delay'
+          type: DEPENDENT
+          key: 'opnsense.api.gws[delay]'
+          value_type: CHAR
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  var threshold_ms = 100.0;
+                  var high_delay = [];
+                  var json = JSON.parse(value).rows;
+                  
+                  for (var ii =0; ii < json.length; ii++){
+                    var gw = json[ii]
+                    if (!gw.disabled && gw.status == "Online") {
+                      var delayMs = parseFloat(gw.delay.split(" ")[0]);
+                      if (delayMs > threshold_ms) {
+                        high_delay.push(gw.name + " " + gw.delay);
+                      }
+                    }
+                  }
+                  
+                  return high_delay.join(" | ");
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - '3600'
+          master_item:
+            key: opnsense.api.gws
+          triggers:
+            - uuid: fb7db0cdbd9249b08dc3e0eb53c9b3dd
+              expression: 'length(last(/Template OPNsense API/opnsense.api.gws[delay]))>0'
+              name: 'OPNsense - Gateways have high delays'
+              priority: AVERAGE
+        - uuid: ab065795788c461dad2c84e5fb86403b
+          name: 'OPNsense - Gateways Offline'
+          type: DEPENDENT
+          key: 'opnsense.api.gws[offline]'
+          value_type: CHAR
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  var not_online = [];
+                  var json = JSON.parse(value).rows;
+                  
+                  for (var ii =0; ii < json.length; ii++){
+                    var gw = json[ii]
+                    if (!gw.disabled && gw.status != "Online") {
+                      not_online.push(gw.name);
+                    }
+                  }
+                  
+                  return not_online.join(" | ");
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - '3600'
+          master_item:
+            key: opnsense.api.gws
+          triggers:
+            - uuid: 52ca434f92fd4285b053fdab27192066
+              expression: 'length(last(/Template OPNsense API/opnsense.api.gws[offline]))>0'
+              name: 'OPNsense - Gateways are offline'
+              priority: AVERAGE
+        - uuid: 31b7e2cfe5f54a2f92c4ac99c0a2b65a
+          name: 'OPNsense - IPSec Phase-1 Stati'
+          type: HTTP_AGENT
+          key: opnsense.api.ipsec.p1
+          delay: 5m
+          value_type: TEXT
+          authtype: BASIC
+          username: '{$OPN_API_KEY}'
+          password: '{$OPN_API_SECRET}'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.body
+          url: 'https://{$OPN_FIREWALL}/api/ipsec/sessions/search_phase1'
+          follow_redirects: 'NO'
+          post_type: JSON
+          posts: '{"current": 1, "rowCount": 200}'
+          request_method: POST
+          output_format: JSON
+          verify_peer: 'YES'
+          verify_host: 'YES'
+        - uuid: eab8a2b45e194bec94fba942d9f689e5
+          name: 'OPNsense - IPSec Phase-1 Count'
+          type: DEPENDENT
+          key: 'opnsense.api.ipsec.p1[count]'
+          trends: '0'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.rows.length()
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - '86400'
+          master_item:
+            key: opnsense.api.ipsec.p1
+          triggers:
+            - uuid: a5ac1720fea44a898d16005af55763bc
+              expression: 'last(/Template OPNsense API/opnsense.api.ipsec.p1[count])<>{$OPN_IPSEC_P1_EXPECT}'
+              name: 'OPNsense - IPSec Tunnels Phase-1 are offline'
+              opdata: 'Expected: {$OPN_IPSEC_P1_EXPECT} | Got: {ITEM.LASTVALUE1}'
+              priority: AVERAGE
+        - uuid: 752ad8dbd367437cbb37cf538149fac2
+          name: 'OPNsense - Routes'
+          type: HTTP_AGENT
+          key: opnsense.api.routes
+          delay: 5m
+          value_type: TEXT
+          authtype: BASIC
+          username: '{$OPN_API_KEY}'
+          password: '{$OPN_API_SECRET}'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.body
+          url: 'https://{$OPN_FIREWALL}/api/diagnostics/interface/get_routes'
+          follow_redirects: 'NO'
+          output_format: JSON
+          verify_peer: 'YES'
+          verify_host: 'YES'
+        - uuid: f3e28ff7d66d435493671d5573e1e851
+          name: 'OPNsense - Service Stati'
+          type: HTTP_AGENT
+          key: opnsense.api.services
+          delay: 5m
+          value_type: TEXT
+          authtype: BASIC
+          username: '{$OPN_API_KEY}'
+          password: '{$OPN_API_SECRET}'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.body
+          url: 'https://{$OPN_FIREWALL}/api/core/service/search'
+          follow_redirects: 'NO'
+          post_type: JSON
+          posts: '{"current": 1, "rowCount": 200}'
+          request_method: POST
+          output_format: JSON
+          verify_peer: 'YES'
+        - uuid: 00dbd05841cb4bf7ba4a8a1deceae65f
+          name: 'OPNsense - System Times'
+          type: HTTP_AGENT
+          key: opnsense.api.system_times
+          delay: 5m
+          value_type: TEXT
+          authtype: BASIC
+          username: '{$OPN_API_KEY}'
+          password: '{$OPN_API_SECRET}'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.body
+          url: 'https://{$OPN_FIREWALL}/api/diagnostics/system/system_time'
+          follow_redirects: 'NO'
+          output_format: JSON
+          verify_peer: 'YES'
+          verify_host: 'YES'
+        - uuid: ba48e8ba09c54663848ee2814b675f6a
+          name: 'OPNsense - VIP '
+          type: HTTP_AGENT
+          key: opnsense.api.vip
+          delay: 5m
+          value_type: TEXT
+          authtype: BASIC
+          username: '{$OPN_API_KEY}'
+          password: '{$OPN_API_SECRET}'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.body
+          url: 'https://{$OPN_FIREWALL}/api/diagnostics/interface/get_vip_status'
+          follow_redirects: 'NO'
+          post_type: JSON
+          posts: '{"current": 1, "rowCount": 200}'
+          request_method: POST
+          output_format: JSON
+          verify_peer: 'YES'
+          verify_host: 'YES'
+        - uuid: d5ae7f3ad1ef4f05bb466564400c68c6
+          name: 'OPNsense - VIP - HA Status'
+          type: DEPENDENT
+          key: 'opnsense.api.vip[ha]'
+          value_type: CHAR
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  var status = "standalone";
+                  var any_primary = false;
+                  var any_secondary = false;
+                  
+                  var json = JSON.parse(value).rows;
+                  
+                  for (var ii =0; ii < json.length; ii++){
+                    var vip = json[ii]
+                    if (vip.mode != "carp") {
+                      continue;
+                    }
+                  
+                    if (vip.status == "MASTER") {
+                      any_primary = true;
+                    } else {
+                      any_secondary = true;
+                    }
+                  }
+                  
+                  if (any_primary && any_secondary) {
+                    status = "partial";
+                  } else if (any_primary) {
+                    status = "primary";
+                  } else if (any_secondary) {
+                    status = "secondary";
+                  }
+                  
+                  return status;
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - '86400'
+          master_item:
+            key: opnsense.api.vip
+          triggers:
+            - uuid: 8118c66ee2eb47eeaef0056aa16cc094
+              expression: 'find(/Template OPNsense API/opnsense.api.vip[ha],,,{$OPN_HA_STATE_EXPECT})=0'
+              name: 'OPNsense - HA-State not as expected'
+              opdata: 'Expected: {$OPN_HA_STATE_EXPECT} | Got: {ITEM.LASTVALUE1}'
+              priority: AVERAGE
+      discovery_rules:
+        - uuid: 4a5582333ff64099aa39ba9f7525db5d
+          name: 'OPNsense IPSec Phase-2 Discovery'
+          type: HTTP_AGENT
+          key: opnsense.api.ipsec.p1.discovery
+          delay: 1h
+          authtype: BASIC
+          username: '{$OPN_API_KEY}'
+          password: '{$OPN_API_SECRET}'
+          lifetime: 1d
+          item_prototypes:
+            - uuid: 5acc78628e1b47f09bcb2f398bd48e0f
+              name: 'OPNsense - IPSec Phase-2 Stati (P1: {#OPN_IPSEC_P1_DESC})'
+              type: HTTP_AGENT
+              key: 'opnsense.api.ipsec.p2[{#OPN_IPSEC_P1_UUID}]'
+              delay: 5m
+              value_type: TEXT
+              authtype: BASIC
+              username: '{$OPN_API_KEY}'
+              password: '{$OPN_API_SECRET}'
+              url: 'https://{$OPN_FIREWALL}/api/ipsec/sessions/search_phase2'
+              post_type: JSON
+              posts: '{"current": 1, "rowCount": 200}'
+              verify_peer: 'YES'
+              verify_host: 'YES'
+          url: 'https://{$OPN_FIREWALL}/api/ipsec/sessions/search_phase1'
+          post_type: JSON
+          posts: '{"current": 1, "rowCount": 200}'
+          request_method: POST
+          verify_peer: 'YES'
+          verify_host: 'YES'
+          lld_macro_paths:
+            - lld_macro: '{#OPN_IPSEC_P1_DESC}'
+              path: $.rows..phase1desc
+            - lld_macro: '{#OPN_IPSEC_P1_UUID}'
+              path: $.rows..name
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.rows
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  var data = [];
+                  var json = JSON.parse(value);
+                  
+                  for (var ii =0; ii < json.length; ii++){
+                    var phase1 = json[ii];
+                    data.push({"{#OPN_IPSEC_P1_UUID}": phase1.name, "{#OPN_IPSEC_P1_DESC}": phase1.phase1Desc});
+                  }
+                  
+                  return JSON.stringify({"data": data});
+      macros:
+        - macro: '{$OPN_API_KEY}'
+        - macro: '{$OPN_API_SECRET}'
+          type: SECRET_TEXT
+        - macro: '{$OPN_FIREWALL}'
+          value: 'IP-or-DNS'
+        - macro: '{$OPN_HA_STATE_EXPECT}'
+          value: 'standalone'
+        - macro: '{$OPN_IPSEC_P1_EXPECT}'
+          value: '0'
+        - macro: '{$OPN_IPSEC_P2_EXPECT}'
+          value: '0'
