@@ -47,7 +47,7 @@ Some checks may only work with OPNsense version >= 25.7
 
 ----
 
-## Install
+## Setup
 
 ### OPNsense Service-User
 
@@ -98,12 +98,18 @@ Some checks may only work with OPNsense version >= 25.7
 
 ----
 
+### Network Access
+
+The Zabbix-Server or -Proxy you choose to monitor the firewall-hosts with, has to be able to connect to the firewall's Web-UI.
+
+----
+
 ### Zabbix Server
 
 * Import the YAML Template into your Zabbix Server
-* Link the template to a Firewall
+* Link the template to a Firewall-Host
 * Configure the required host-macros:
-  * `{$OPN_FIREWALL}` => the IP or DNS of the firewall (*can include a port*)
+  * `{$OPN_FIREWALL}` => the IP or DNS of the firewall as configured for the Web-UI (*can include a port*)
   * `{$OPN_API_KEY}` => the generated API-key
   * `{$OPN_API_SECRET}` => the generated API-secret
 
