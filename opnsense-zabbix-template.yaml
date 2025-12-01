@@ -174,6 +174,38 @@ zabbix_export:
           request_method: POST
           output_format: JSON
           verify_peer: 'YES'
+        - uuid: 83d52d875ec141378388e1cf4d126fab
+          name: 'OPNsense - Services inactive'
+          type: DEPENDENT
+          key: 'opnsense.api.services[inactive]'
+          delay: '0'
+          value_type: CHAR
+          trends: '0'
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  var inactive = [];
+                  var json = JSON.parse(value).rows;
+                  
+                  for (var ii =0; ii < json.length; ii++){
+                    var svc = json[ii]
+                    if (!svc.running) {
+                      inactive.push(svc.description);
+                    }
+                  }
+                  
+                  return inactive.join(" | ");
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - '3600'
+          master_item:
+            key: opnsense.api.services
+          triggers:
+            - uuid: 275842ca30344a0aa32821c9f40836d9
+              expression: 'length(last(/Template OPNsense API/opnsense.api.services[inactive]))>0'
+              name: 'OPNsense - Services are inactive'
+              priority: AVERAGE
         - uuid: 00dbd05841cb4bf7ba4a8a1deceae65f
           name: 'OPNsense - System Times'
           type: HTTP_AGENT
@@ -272,12 +304,34 @@ zabbix_export:
           password: '{$OPN_API_SECRET}'
           lifetime: 1d
           item_prototypes:
+            - uuid: 17179f2be971499a85147f16c1cac896
+              name: 'OPNsense - IPSec Phase-2 Count (P1: {#OPN_IPSEC_P1_DESC})'
+              type: DEPENDENT
+              key: 'opnsense.api.ipsec.p2.count[{#OPN_IPSEC_P1_UUID}]'
+              delay: '0'
+              trends: '0'
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - $.rows.length()
+              master_item:
+                key: 'opnsense.api.ipsec.p2[{#OPN_IPSEC_P1_UUID}]'
+              trigger_prototypes:
+                - uuid: e4572a80ce5d4bcf80bf124cc0833605
+                  expression: 'last(/Template OPNsense API/opnsense.api.ipsec.p2.count[{#OPN_IPSEC_P1_UUID}])<>{$OPN_IPSEC_P2_EXPECT}'
+                  name: 'OPNsense - IPSec Tunnels Phase-2 are offline'
+                  opdata: 'Expected: {$OPN_IPSEC_P2_EXPECT} | Got: {ITEM.LASTVALUE1}'
+                  priority: AVERAGE
+                  dependencies:
+                    - name: 'OPNsense - IPSec Tunnels Phase-1 are offline'
+                      expression: 'last(/Template OPNsense API/opnsense.api.ipsec.p1[count])<>{$OPN_IPSEC_P1_EXPECT}'
             - uuid: 5acc78628e1b47f09bcb2f398bd48e0f
               name: 'OPNsense - IPSec Phase-2 Stati (P1: {#OPN_IPSEC_P1_DESC})'
               type: HTTP_AGENT
               key: 'opnsense.api.ipsec.p2[{#OPN_IPSEC_P1_UUID}]'
               delay: 5m
               value_type: TEXT
+              trends: '0'
               authtype: BASIC
               username: '{$OPN_API_KEY}'
               password: '{$OPN_API_SECRET}'

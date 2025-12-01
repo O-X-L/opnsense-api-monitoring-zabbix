@@ -52,12 +52,21 @@ Some checks may only work with OPNsense version >= 25.7
 ### OPNsense Service-User
 
 * Create a new user at `System - Access - Users`
+
+  <img src="https://raw.githubusercontent.com/O-X-L/opnsense-api-monitoring-zabbix/refs/heads/latest/docs/system-access-users.png" alt="OPNsense User Menu" width="300" />
+
 * Give the user a name, password and the following permissions:
   * `Lobby: Dashboard`
   * `Diagnostics: Routing tables`
   * `System: Gateways` & `System: Gateway Groups` (*sadly, it seems there is no read-only option for the gateways*)
   * All with prefix `Status:` (*Could be limited*)
+
+  <img src="https://raw.githubusercontent.com/O-X-L/opnsense-api-monitoring-zabbix/refs/heads/latest/docs/new-user.png" alt="OPNsense User creation" width="250" />
+
 * Create and download an API-key for the user
+
+  <img src="https://raw.githubusercontent.com/O-X-L/opnsense-api-monitoring-zabbix/refs/heads/latest/docs/api-key.png" alt="OPNsense User API-Key creation" width="400" />
+
 * Test the access:
 
   If you see a response like this - you may have to increase the permissions: `{"status":403,"message":"Forbidden"}`
@@ -86,6 +95,8 @@ Some checks may only work with OPNsense version >= 25.7
   echo "### TESTING GATEWAYS ###"
   curl -u "${OPN_API_KEY}:${OPN_API_SECRET}" -XGET "https://${OPN_FIREWALL}/api/routing/settings/search_gateway"
   ```
+
+----
 
 ### Zabbix Server
 
