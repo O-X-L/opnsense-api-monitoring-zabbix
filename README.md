@@ -53,7 +53,7 @@ Some checks may only work with OPNsense version >= 25.7
 
 * Create a new user at `System - Access - Users`
 
-  <img src="https://raw.githubusercontent.com/O-X-L/opnsense-api-monitoring-zabbix/refs/heads/latest/docs/system-access-users.png" alt="OPNsense User Menu" width="300" />
+  <img src="https://raw.githubusercontent.com/O-X-L/opnsense-api-monitoring-zabbix/refs/heads/latest/docs/system-access-users.png" alt="OPNsense User Menu" width="400" />
 
 * Give the user a name, password and the following permissions:
   * `Lobby: Dashboard`
@@ -61,7 +61,7 @@ Some checks may only work with OPNsense version >= 25.7
   * `System: Gateways` & `System: Gateway Groups` (*sadly, it seems there is no read-only option for the gateways*)
   * All with prefix `Status:` (*Could be limited*)
 
-  <img src="https://raw.githubusercontent.com/O-X-L/opnsense-api-monitoring-zabbix/refs/heads/latest/docs/new-user.png" alt="OPNsense User creation" width="250" />
+  <img src="https://raw.githubusercontent.com/O-X-L/opnsense-api-monitoring-zabbix/refs/heads/latest/docs/new-user.png" alt="OPNsense User creation" width="350" />
 
 * Create and download an API-key for the user
 
