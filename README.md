@@ -55,7 +55,7 @@ Some checks may only work with OPNsense version >= 25.7
 
   <img src="https://raw.githubusercontent.com/O-X-L/opnsense-api-monitoring-zabbix/refs/heads/latest/docs/system-access-users.png" alt="OPNsense User Menu" width="400" />
 
-* Give the user a name, password and the following permissions:
+* Give the user a name, password and the following privileges:
   * `Lobby: Dashboard`
   * `Diagnostics: Routing tables`
   * `System: Gateways` & `System: Gateway Groups` (*sadly, it seems there is no read-only option for the gateways*)
