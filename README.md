@@ -38,12 +38,12 @@ Some checks may only work with OPNsense version >= 25.7
   * System Times
 
 * Triggers
-  * OPNsense - Gateways are offline
-  * OPNsense - Services are inactive
-  * OPNsense - Gateways have high delays
-  * OPNsense - HA-State not as expected
-  * OPNsense - IPSec Tunnels Phase-1 are offline
-  * OPNsense - IPSec Tunnels Phase-2 are offline
+  * Gateways are offline
+  * Services are inactive
+  * Gateways have high delays
+  * HA-State not as expected
+  * IPSec Tunnels Phase-1 are offline
+  * IPSec Tunnels Phase-2 are offline
 
 ----
 
