@@ -22,28 +22,37 @@ Some checks may only work with OPNsense version >= 25.7
 
 ## Template Content
 
-* Items
-  * Gateway Stati
-    * Gateway Stati: OPNsense - Gateways High Delay
-    * Gateway Stati: OPNsense - Gateways Offline
-  * VIP Stati
-    * VIP - HA Status
-  * IPSec Phase-1 Stati
-    * IPSec Phase-1 Count
-  * IPSec Phase-2 Discovery
-    * IPSec Phase-2 Status
-      * IPSec Phase-2 Count
-  * Routes
-  * Service Stati
-  * System Times
+### Items
 
-* Triggers
-  * Gateways are offline
-  * Services are inactive
-  * Gateways have high delays
-  * HA-State not as expected
-  * IPSec Tunnels Phase-1 are offline
-  * IPSec Tunnels Phase-2 are offline
+* **Gateway Stati**
+  * Gateways High Delay
+  * Gateways Offline
+
+* **VIP Stati** (*Virtual IPs*)
+  * VIP - HA Status
+
+* **IPSec Phase-1 Stati**
+  * IPSec Phase-1 Count
+
+* **IPSec Phase-1 Discovery**
+  * IPSec Phase-2 Status
+    * IPSec Phase-2 Count
+
+* **Routes**
+
+* **Service Stati**
+
+* **System Times**
+
+### Triggers
+
+* API connection failed
+* Gateways are offline
+* Services are inactive
+* Gateways have high delays
+* VIP HA-State not as expected
+* IPSec Tunnels Phase-1 are offline
+* IPSec Tunnels Phase-2 are offline
 
 ----
 
@@ -58,7 +67,9 @@ Some checks may only work with OPNsense version >= 25.7
 * Give the user a name, password and the following privileges:
   * `Lobby: Dashboard`
   * `Diagnostics: Routing tables`
+  * `Interfaces: Virtual IPs: Status`
   * `System: Gateways` & `System: Gateway Groups` (*sadly, it seems there is no read-only option for the gateways*)
+  * `VPN: WireGuard: Status` (*Not in use yet*)
   * All with prefix `Status:` (*Could be limited*)
 
   <img src="https://raw.githubusercontent.com/O-X-L/opnsense-api-monitoring-zabbix/refs/heads/latest/docs/new-user.png" alt="OPNsense User creation" width="350" />
@@ -77,23 +88,23 @@ Some checks may only work with OPNsense version >= 25.7
   OPN_API_SECRET="YOUR-SECRET"
   
   echo "### TESTING SYSTEM-TIMES ###"
-  curl -u "${OPN_API_KEY}:${OPN_API_SECRET}" -XGET "https://${OPN_FIREWALL}/api/diagnostics/system/system_time"
+  curl -u "${OPN_API_KEY}:${OPN_API_SECRET}" "https://${OPN_FIREWALL}/api/diagnostics/system/system_time"
 
   echo "### TESTING ROUTES ###"
-  curl -u "${OPN_API_KEY}:${OPN_API_SECRET}" -XGET "https://${OPN_FIREWALL}/api/diagnostics/interface/get_routes"
+  curl -u "${OPN_API_KEY}:${OPN_API_SECRET}" "https://${OPN_FIREWALL}/api/diagnostics/interface/get_routes"
   
-  echo "### TESTING VIRTUAL-IPs ###"
-  curl -u "${OPN_API_KEY}:${OPN_API_SECRET}" -XGET "https://${OPN_FIREWALL}/api/diagnostics/interface/get_vip_status"
+  echo "### TESTING VIRTUAL-IPs ###"  # method: "-X POST"
+  curl -u "${OPN_API_KEY}:${OPN_API_SECRET}" "https://${OPN_FIREWALL}/api/diagnostics/interface/get_vip_status"
 
-  echo "### TESTING IPSec ###"
-  curl -u "${OPN_API_KEY}:${OPN_API_SECRET}" -XGET "https://${OPN_FIREWALL}/api/ipsec/sessions/search_phase1"
-  curl -u "${OPN_API_KEY}:${OPN_API_SECRET}" -XGET "https://${OPN_FIREWALL}/api/ipsec/sessions/search_phase2"
+  echo "### TESTING IPSec ###"  # method: "-X POST"
+  curl -u "${OPN_API_KEY}:${OPN_API_SECRET}" "https://${OPN_FIREWALL}/api/ipsec/sessions/search_phase1"
+  curl -u "${OPN_API_KEY}:${OPN_API_SECRET}" "https://${OPN_FIREWALL}/api/ipsec/sessions/search_phase2"
   
-  echo "### TESTING SERVICES ###"
-  curl -u "${OPN_API_KEY}:${OPN_API_SECRET}" -XGET "https://${OPN_FIREWALL}/api/core/service/search"
+  echo "### TESTING SERVICES ###"  # method: "-X POST"
+  curl -u "${OPN_API_KEY}:${OPN_API_SECRET}" "https://${OPN_FIREWALL}/api/core/service/search"
 
-  echo "### TESTING GATEWAYS ###"
-  curl -u "${OPN_API_KEY}:${OPN_API_SECRET}" -XGET "https://${OPN_FIREWALL}/api/routing/settings/search_gateway"
+  echo "### TESTING GATEWAYS ###"  # method: "-X POST"
+  curl -u "${OPN_API_KEY}:${OPN_API_SECRET}" "https://${OPN_FIREWALL}/api/routing/settings/search_gateway"
   ```
 
 ----
